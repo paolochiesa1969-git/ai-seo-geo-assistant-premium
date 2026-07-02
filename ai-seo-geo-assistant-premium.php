@@ -3,7 +3,7 @@
  * Plugin Name:       AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AI SEO & GEO Assistant. Si installa accanto al plugin free e ne sblocca le funzioni professionali quando la licenza è attiva. Viene scaricato e installato automaticamente all'attivazione di una licenza valida.
- * Version:           1.99.864
+ * Version:           1.99.865
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -20,7 +20,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '1.99.864' );
+define( 'AISA_PREMIUM_VERSION', '1.99.865' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.700' );
 
 final class Aisa_Premium {
