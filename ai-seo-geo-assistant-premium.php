@@ -3,7 +3,7 @@
  * Plugin Name:       AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AI SEO & GEO Assistant. Si installa accanto al plugin free e ne sblocca le funzioni professionali quando la licenza è attiva. Viene scaricato e installato automaticamente all'attivazione di una licenza valida.
- * Version:           1.99.767
+ * Version:           1.99.863
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -20,7 +20,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '1.99.767' );
+define( 'AISA_PREMIUM_VERSION', '1.99.863' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.700' );
 
 final class Aisa_Premium {
@@ -70,8 +70,8 @@ final class Aisa_Premium {
 		if ( $this->free_ok() ) return;
 		if ( ! current_user_can( 'activate_plugins' ) ) return;
 		$msg = defined( 'AISA_VERSION' )
-			? sprintf( 'AI SEO &amp; GEO Assistant <strong>free</strong> è troppo vecchio per il componente Premium (serve ≥ %s, presente %s). Aggiorna il plugin free.', esc_html( AISA_PREMIUM_MIN_FREE ), esc_html( AISA_VERSION ) )
-			: 'Il componente <strong>AI SEO &amp; GEO Assistant — Premium</strong> richiede il plugin base <strong>AI SEO &amp; GEO Assistant</strong> (free) attivo.';
+			? sprintf( /* translators: %1$s: required version; %2$s: present version */ __( 'AI SEO &amp; GEO Assistant <strong>free</strong> è troppo vecchio per il componente Premium (serve ≥ %1$s, presente %2$s). Aggiorna il plugin free.', 'ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_MIN_FREE ), esc_html( AISA_VERSION ) )
+			: __( 'Il componente <strong>AI SEO &amp; GEO Assistant — Premium</strong> richiede il plugin base <strong>AI SEO &amp; GEO Assistant</strong> (free) attivo.', 'ai-seo-geo-assistant' );
 		echo '<div class="notice notice-warning"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 
@@ -85,8 +85,8 @@ final class Aisa_Premium {
 			'<div class="notice notice-%s"><p>%s</p></div>',
 			$on ? 'success' : 'info',
 			$on
-				? '🧩 Componente <strong>Premium</strong> installato e attivo (v' . esc_html( AISA_PREMIUM_VERSION ) . ') — funzioni professionali sbloccate.'
-				: '🧩 Componente <strong>Premium</strong> installato (v' . esc_html( AISA_PREMIUM_VERSION ) . '). In attesa di una licenza valida per sbloccare le funzioni.'
+				? sprintf( /* translators: %s: version */ __( '🧩 Componente <strong>Premium</strong> installato e attivo (v%s) — funzioni professionali sbloccate.', 'ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_VERSION ) )
+				: sprintf( /* translators: %s: version */ __( '🧩 Componente <strong>Premium</strong> installato (v%s). In attesa di una licenza valida per sbloccare le funzioni.', 'ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_VERSION ) )
 		);
 	}
 }
