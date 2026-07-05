@@ -3,7 +3,7 @@
  * Plugin Name:       AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
- * Version:           2.0.1
+ * Version:           2.0.2
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -24,7 +24,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '2.0.1' );
+define( 'AISA_PREMIUM_VERSION', '2.0.2' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.874' ); // prima versione col contratto ORG-SPLIT (aisa_rotation_engine)
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
@@ -134,8 +134,10 @@ final class Aisa_Premium {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
-		if ( is_plugin_active( 'ai-seo-geo-assistant/ai-seo-geo-assistant.php' ) ) return; // free attivo → ok
-		if ( defined( 'AISA_VERSION' ) ) return; // il free è caricato per altra via (delivery) → non toccare
+		// Il base può avere lo slug .org (aisa-…) o quello delivery (ai-seo-geo-assistant).
+		if ( is_plugin_active( 'aisa-ai-seo-geo-assistant/aisa-ai-seo-geo-assistant.php' )
+			|| is_plugin_active( 'ai-seo-geo-assistant/ai-seo-geo-assistant.php' ) ) return; // free attivo → ok
+		if ( defined( 'AISA_VERSION' ) ) return; // il free è caricato per altra via → non toccare
 		deactivate_plugins( plugin_basename( __FILE__ ) );
 		set_transient( 'aisa_premium_self_deactivated', 1, 60 );
 	}
