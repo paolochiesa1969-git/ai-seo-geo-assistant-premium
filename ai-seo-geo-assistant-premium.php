@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
- * Description:       Componente Premium di AI SEO & GEO Assistant. Si installa accanto al plugin free e ne sblocca le funzioni professionali quando la licenza è attiva. Viene scaricato e installato automaticamente all'attivazione di una licenza valida.
- * Version:           1.99.872
+ * Description:       Componente Premium di AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
+ * Version:           2.0.0
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -11,23 +11,62 @@
  * License:           GPL-2.0-or-later
  * Copyright:         © 2026 Ingenium Project
  *
- * NOTA ARCHITETTURA (LICENSING-TWO-PLUGIN.md): questo .zip NON sta su WordPress.org.
- * Viene consegnato dopo l'acquisto e auto-installato dal free quando la licenza è
- * valida. Il free espone i ganci (aisa_is_unlocked / aisa_feature_allowed); qui li
- * agganciamo. Lo sblocco resta condizionato alla licenza valida — un .zip nulled
- * senza licenza non sblocca nulla.
+ * ARCHITETTURA 2.0 (ORG-SPLIT-PLAN.md — review .org 07/2026, Guideline 5):
+ * da questa versione il codice premium VIVE QUI (prima stava nel free, gated da
+ * licenza): One-Click, Bulk, Scheduler, Rotation e la licenza LemonSqueezy sono
+ * classi di questo plugin (copiate in build da build-companion.sh, fonte di
+ * verità = repo del free). Il free .org non contiene né limiti né license-check.
+ * Questo .zip NON sta su WordPress.org: si scarica da aiseoassistant.io dopo
+ * l'acquisto e si installa a mano (l'auto-installer è stato rimosso dal free).
+ * Un .zip nulled senza licenza non attiva nulla: le feature bootano solo con
+ * licenza valida.
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '1.99.872' );
-define( 'AISA_PREMIUM_MIN_FREE', '1.99.700' );
+define( 'AISA_PREMIUM_VERSION', '2.0.0' );
+define( 'AISA_PREMIUM_MIN_FREE', '1.99.874' ); // prima versione col contratto ORG-SPLIT (aisa_rotation_engine)
+define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
+define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
+
+/*
+ * Le classi premium (copiate dal repo free in fase di build). Require al load
+ * del file — sono solo dichiarazioni, niente side effect — così il filtro
+ * aisa_rotation_engine (che il free applica a plugins_loaded:10) le trova pronte
+ * QUALUNQUE sia l'ordine di caricamento dei due plugin. Guardie doppie: nel repo
+ * di sviluppo includes/ può mancare; nella delivery monolitica le classi
+ * esistono già nel free (mai ridefinirle).
+ */
+foreach ( [
+	'Aisa_License'   => 'includes/class-aisa-license.php',
+	'Aisa_OneClick'  => 'includes/class-aisa-oneclick.php',
+	'Aisa_Bulk'      => 'includes/class-aisa-bulk.php',
+	'Aisa_Scheduler' => 'includes/class-aisa-scheduler.php',
+	'Aisa_Rotation'  => 'includes/class-aisa-rotation.php',
+] as $aisa_premium_class => $aisa_premium_inc ) {
+	if ( ! class_exists( $aisa_premium_class ) && file_exists( AISA_PREMIUM_DIR . $aisa_premium_inc ) ) {
+		require_once AISA_PREMIUM_DIR . $aisa_premium_inc;
+	}
+}
+unset( $aisa_premium_class, $aisa_premium_inc );
 
 final class Aisa_Premium {
 
 	public function __construct() {
-		add_action( 'plugins_loaded', [ $this, 'boot' ], 20 );
+		add_action( 'plugins_loaded', [ $this, 'boot' ], 5 ); // PRIMA del free (10): i filtri devono esserci quando lui li applica
 		add_action( 'admin_notices', [ $this, 'requirement_notice' ] );
+
+		/*
+		 * Engine Rotation per il frontend del free: il free (≥ MIN_FREE) chiede
+		 * l'engine via filtro a plugins_loaded:10. Registrato QUI al load del
+		 * file così c'è sempre, in qualunque ordine i plugin vengano inclusi.
+		 */
+		add_filter( 'aisa_rotation_engine', static function ( $engine ) {
+			if ( $engine ) return $engine; // delivery monolitica: già istanziato dal free
+			if ( ! class_exists( 'Aisa_Rotation' ) || ! class_exists( 'Aisa_Dashboard' ) ) return $engine;
+			if ( ! self::license_valid() ) return $engine;
+			return Aisa_Dashboard::is_active( 'rotation' ) ? new Aisa_Rotation() : $engine;
+		} );
 	}
 
 	/** Il plugin free è presente e abbastanza recente? */
@@ -35,30 +74,47 @@ final class Aisa_Premium {
 		return defined( 'AISA_VERSION' ) && version_compare( AISA_VERSION, AISA_PREMIUM_MIN_FREE, '>=' );
 	}
 
-	/** La licenza è valida su questo sito? (delega al free, unica fonte di verità). */
+	/** La licenza è valida su questo sito? (la classe Aisa_License ora vive qui). */
 	public static function license_valid(): bool {
 		if ( class_exists( 'Aisa_License' ) && Aisa_License::instance() ) {
 			return (bool) Aisa_License::instance()->is_active();
 		}
-		// Fallback: il free non ancora caricato → usa il filtro premium se disponibile.
 		return function_exists( 'aisa_is_premium' ) && aisa_is_premium();
 	}
 
 	public function boot(): void {
 		if ( ! $this->free_ok() ) return;
 
-		// CONTRATTO: il componente premium è installato → conferma lo sblocco,
-		// ma SOLO con licenza valida (no licenza = nessuno sblocco anche se installato).
+		/*
+		 * CONTRATTO storico free↔premium: i filtri di sblocco restano per
+		 * compatibilità con i free pre-split (delivery) che gate-ano via
+		 * aisa_is_unlocked/aisa_feature_allowed. Nel free .org post-split non
+		 * c'è nulla da sbloccare: sono no-op innocui.
+		 */
 		add_filter( 'aisa_is_unlocked', static function ( $unlocked ) {
 			return self::license_valid() ? true : $unlocked;
 		}, 100 );
-
 		add_filter( 'aisa_feature_allowed', static function ( $allowed, $feature ) {
 			return self::license_valid() ? true : $allowed;
 		}, 100, 2 );
 
-		// Punto di registrazione delle funzioni pro (oggi vivono ancora nel free,
-		// gated da licenza; il gancio è pronto per lo spacchettamento futuro — STEP 3).
+		/*
+		 * Boot delle funzioni premium — SOLO in architettura 2.0 (free .org:
+		 * AISA_ORG_BUILD segnala che il free NON le istanzia lui). Nella delivery
+		 * monolitica il free le istanzia già: qui non tocchiamo nulla.
+		 */
+		if ( defined( 'AISA_ORG_BUILD' ) ) {
+			if ( class_exists( 'Aisa_License' ) ) {
+				new Aisa_License(); // pagina Licenza + validazione LS: SEMPRE (serve per attivare)
+			}
+			if ( self::license_valid() ) {
+				if ( class_exists( 'Aisa_OneClick' ) )  new Aisa_OneClick();
+				if ( class_exists( 'Aisa_Bulk' ) )      new Aisa_Bulk();
+				if ( class_exists( 'Aisa_Scheduler' ) ) new Aisa_Scheduler();
+			}
+		}
+
+		// Punto di registrazione di eventuali estensioni pro esterne.
 		do_action( 'aisa_register_pro_features' );
 
 		// Badge "componente Premium attivo" nella pagina Licenza.
