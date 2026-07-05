@@ -3,7 +3,7 @@
  * Plugin Name:       AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
- * Version:           2.0.0
+ * Version:           2.0.1
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -24,7 +24,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '2.0.0' );
+define( 'AISA_PREMIUM_VERSION', '2.0.1' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.874' ); // prima versione col contratto ORG-SPLIT (aisa_rotation_engine)
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
@@ -55,6 +55,9 @@ final class Aisa_Premium {
 	public function __construct() {
 		add_action( 'plugins_loaded', [ $this, 'boot' ], 5 ); // PRIMA del free (10): i filtri devono esserci quando lui li applica
 		add_action( 'admin_notices', [ $this, 'requirement_notice' ] );
+		// Il companion senza il plugin base non fa nulla → si auto-disattiva se il free è spento.
+		add_action( 'admin_init', [ $this, 'maybe_self_deactivate' ] );
+		add_action( 'admin_notices', [ $this, 'self_deactivated_notice' ] );
 
 		/*
 		 * Engine Rotation per il frontend del free: il free (≥ MIN_FREE) chiede
@@ -119,6 +122,32 @@ final class Aisa_Premium {
 
 		// Badge "componente Premium attivo" nella pagina Licenza.
 		add_action( 'admin_notices', [ $this, 'active_badge' ] );
+	}
+
+	/**
+	 * Se il plugin base (free) NON è attivo, il companion si disattiva da solo:
+	 * senza il free non ha su cosa agganciarsi. (Se il free è attivo ma solo
+	 * troppo vecchio, NON disattiviamo: mostriamo requirement_notice per invitare
+	 * ad aggiornare.)
+	 */
+	public function maybe_self_deactivate(): void {
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		if ( is_plugin_active( 'ai-seo-geo-assistant/ai-seo-geo-assistant.php' ) ) return; // free attivo → ok
+		if ( defined( 'AISA_VERSION' ) ) return; // il free è caricato per altra via (delivery) → non toccare
+		deactivate_plugins( plugin_basename( __FILE__ ) );
+		set_transient( 'aisa_premium_self_deactivated', 1, 60 );
+	}
+
+	/** Avviso una tantum dopo l'auto-disattivazione. */
+	public function self_deactivated_notice(): void {
+		if ( ! get_transient( 'aisa_premium_self_deactivated' ) ) return;
+		delete_transient( 'aisa_premium_self_deactivated' );
+		if ( ! current_user_can( 'activate_plugins' ) ) return;
+		echo '<div class="notice notice-warning is-dismissible"><p>'
+			. esc_html__( 'AI SEO & GEO Assistant — Premium è stato disattivato automaticamente perché il plugin base "AI SEO & GEO Assistant" non è attivo. Riattiva prima il plugin base, poi il componente Premium.', 'ai-seo-geo-assistant' )
+			. '</p></div>';
 	}
 
 	/** Avviso se manca/è troppo vecchio il plugin free. */
