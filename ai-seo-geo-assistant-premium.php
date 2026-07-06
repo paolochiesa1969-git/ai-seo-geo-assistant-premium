@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       AI SEO & GEO Assistant — Premium
+ * Plugin Name:       AISA — AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
- * Description:       Componente Premium di AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
- * Version:           2.0.3
+ * Description:       Componente Premium di AISA — AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
+ * Version:           1.99.882
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -24,7 +24,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '2.0.3' );
+define( 'AISA_PREMIUM_VERSION', '1.99.882' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.874' ); // prima versione col contratto ORG-SPLIT (aisa_rotation_engine)
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
@@ -146,7 +146,7 @@ final class Aisa_Premium {
 		delete_transient( 'aisa_premium_self_deactivated' );
 		if ( ! current_user_can( 'activate_plugins' ) ) return;
 		echo '<div class="notice notice-warning is-dismissible"><p>'
-			. esc_html__( 'AI SEO & GEO Assistant — Premium è stato disattivato automaticamente perché il plugin base "AI SEO & GEO Assistant" non è attivo. Riattiva prima il plugin base, poi il componente Premium.', 'ai-seo-geo-assistant' )
+			. esc_html__( 'AISA — AI SEO & GEO Assistant — Premium è stato disattivato automaticamente perché il plugin base "AISA — AI SEO & GEO Assistant" non è attivo. Riattiva prima il plugin base, poi il componente Premium.', 'ai-seo-geo-assistant' )
 			. '</p></div>';
 	}
 
@@ -155,8 +155,8 @@ final class Aisa_Premium {
 		if ( $this->free_ok() ) return;
 		if ( ! current_user_can( 'activate_plugins' ) ) return;
 		$msg = defined( 'AISA_VERSION' )
-			? sprintf( /* translators: %1$s: required version; %2$s: present version */ __( 'AI SEO &amp; GEO Assistant <strong>free</strong> è troppo vecchio per il componente Premium (serve ≥ %1$s, presente %2$s). Aggiorna il plugin free.', 'ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_MIN_FREE ), esc_html( AISA_VERSION ) )
-			: __( 'Il componente <strong>AI SEO &amp; GEO Assistant — Premium</strong> richiede il plugin base <strong>AI SEO &amp; GEO Assistant</strong> (free) attivo.', 'ai-seo-geo-assistant' );
+			? sprintf( /* translators: %1$s: required version; %2$s: present version */ __( 'AISA — AI SEO &amp; GEO Assistant <strong>free</strong> è troppo vecchio per il componente Premium (serve ≥ %1$s, presente %2$s). Aggiorna il plugin free.', 'ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_MIN_FREE ), esc_html( AISA_VERSION ) )
+			: __( 'Il componente <strong>AISA — AI SEO &amp; GEO Assistant — Premium</strong> richiede il plugin base <strong>AISA — AI SEO &amp; GEO Assistant</strong> (free) attivo.', 'ai-seo-geo-assistant' );
 		echo '<div class="notice notice-warning"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 
