@@ -3,7 +3,7 @@
  * Plugin Name:       AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
- * Version:           2.0.2
+ * Version:           2.0.3
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -24,7 +24,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '2.0.2' );
+define( 'AISA_PREMIUM_VERSION', '2.0.3' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.874' ); // prima versione col contratto ORG-SPLIT (aisa_rotation_engine)
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
@@ -37,8 +37,9 @@ define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
  * di sviluppo includes/ può mancare; nella delivery monolitica le classi
  * esistono già nel free (mai ridefinirle).
  */
+// NOTA: Aisa_License NON è più qui — vive nel plugin FREE (campo licenza + attivazione online).
+// Il companion la usa a runtime (class_exists/instance), non la ridichiara (evita "Cannot redeclare").
 foreach ( [
-	'Aisa_License'   => 'includes/class-aisa-license.php',
 	'Aisa_OneClick'  => 'includes/class-aisa-oneclick.php',
 	'Aisa_Bulk'      => 'includes/class-aisa-bulk.php',
 	'Aisa_Scheduler' => 'includes/class-aisa-scheduler.php',
@@ -53,7 +54,7 @@ unset( $aisa_premium_class, $aisa_premium_inc );
 final class Aisa_Premium {
 
 	public function __construct() {
-		add_action( 'plugins_loaded', [ $this, 'boot' ], 5 ); // PRIMA del free (10): i filtri devono esserci quando lui li applica
+		add_action( 'plugins_loaded', [ $this, 'boot' ], 20 ); // DOPO il free (10): la licenza (Aisa_License) la istanzia il free, qui la leggiamo pronta. Il filtro rotation è nel costruttore (già pronto a :10).
 		add_action( 'admin_notices', [ $this, 'requirement_notice' ] );
 		// Il companion senza il plugin base non fa nulla → si auto-disattiva se il free è spento.
 		add_action( 'admin_init', [ $this, 'maybe_self_deactivate' ] );
@@ -106,15 +107,12 @@ final class Aisa_Premium {
 		 * AISA_ORG_BUILD segnala che il free NON le istanzia lui). Nella delivery
 		 * monolitica il free le istanzia già: qui non tocchiamo nulla.
 		 */
-		if ( defined( 'AISA_ORG_BUILD' ) ) {
-			if ( class_exists( 'Aisa_License' ) ) {
-				new Aisa_License(); // pagina Licenza + validazione LS: SEMPRE (serve per attivare)
-			}
-			if ( self::license_valid() ) {
-				if ( class_exists( 'Aisa_OneClick' ) )  new Aisa_OneClick();
-				if ( class_exists( 'Aisa_Bulk' ) )      new Aisa_Bulk();
-				if ( class_exists( 'Aisa_Scheduler' ) ) new Aisa_Scheduler();
-			}
+		// La pagina Licenza + validazione la fornisce il plugin FREE (Aisa_License istanziata lì):
+		// qui NON la ri-istanziamo. Con licenza valida eroghiamo le FUNZIONI premium.
+		if ( defined( 'AISA_ORG_BUILD' ) && self::license_valid() ) {
+			if ( class_exists( 'Aisa_OneClick' ) )  new Aisa_OneClick();
+			if ( class_exists( 'Aisa_Bulk' ) )      new Aisa_Bulk();
+			if ( class_exists( 'Aisa_Scheduler' ) ) new Aisa_Scheduler();
 		}
 
 		// Punto di registrazione di eventuali estensioni pro esterne.
