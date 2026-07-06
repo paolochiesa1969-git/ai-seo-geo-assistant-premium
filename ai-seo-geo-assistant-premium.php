@@ -25,7 +25,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 define( 'AISA_PREMIUM_VERSION', '1.99.882' );
-define( 'AISA_PREMIUM_MIN_FREE', '1.99.874' ); // prima versione col contratto ORG-SPLIT (aisa_rotation_engine)
+define( 'AISA_PREMIUM_MIN_FREE', '1.99.882' ); // prima coppia ALLINEATA free/companion (la Licenza vive nel free). Free più nuovo = sempre ok.
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
 
