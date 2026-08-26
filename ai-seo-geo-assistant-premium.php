@@ -3,7 +3,7 @@
  * Plugin Name:       AISA — AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AISA — AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
- * Version:           1.99.986
+ * Version:           1.99.987
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -24,7 +24,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '1.99.986' );
+define( 'AISA_PREMIUM_VERSION', '1.99.987' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.882' ); // prima coppia ALLINEATA free/companion (la Licenza vive nel free). Free più nuovo = sempre ok.
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
@@ -44,6 +44,11 @@ foreach ( [
 	'Aisa_Bulk'      => 'includes/class-aisa-bulk.php',
 	'Aisa_Scheduler' => 'includes/class-aisa-scheduler.php',
 	'Aisa_Rotation'  => 'includes/class-aisa-rotation.php',
+	// 🔴 ORG-SPLIT (review .org 26/08/2026): il pacchetto pubblico non può contenere
+	// funzioni bloccate dalla licenza → applicazione fix del SEO Doctor e Consultant
+	// vivono QUI. Nel free .org queste classi semplicemente non esistono.
+	'Aisa_Seo_Fix_Apply' => 'includes/class-aisa-seo-fix-apply.php',
+	'Aisa_Consultant'    => 'includes/class-aisa-consultant.php',
 ] as $aisa_premium_class => $aisa_premium_inc ) {
 	if ( ! class_exists( $aisa_premium_class ) && file_exists( AISA_PREMIUM_DIR . $aisa_premium_inc ) ) {
 		require_once AISA_PREMIUM_DIR . $aisa_premium_inc;
@@ -113,6 +118,10 @@ final class Aisa_Premium {
 			if ( class_exists( 'Aisa_OneClick' ) )  new Aisa_OneClick();
 			if ( class_exists( 'Aisa_Bulk' ) )      new Aisa_Bulk();
 			if ( class_exists( 'Aisa_Scheduler' ) ) new Aisa_Scheduler();
+			// Aisa_Seo_Fix_Apply registra i 3 endpoint "applica" che il free .org non
+			// dichiara più; Aisa_Consultant è premium per intero (menu + AJAX).
+			if ( class_exists( 'Aisa_Seo_Fix_Apply' ) && class_exists( 'Aisa_Seo_Fix' ) ) new Aisa_Seo_Fix_Apply();
+			if ( class_exists( 'Aisa_Consultant' ) )  new Aisa_Consultant();
 		}
 
 		// Punto di registrazione di eventuali estensioni pro esterne.
