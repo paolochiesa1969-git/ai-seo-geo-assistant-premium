@@ -3,7 +3,7 @@
  * Plugin Name:       AISA — AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AISA — AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
- * Version:           1.99.992
+ * Version:           1.99.993
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -24,7 +24,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '1.99.992' );
+define( 'AISA_PREMIUM_VERSION', '1.99.993' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.882' ); // prima coppia ALLINEATA free/companion (la Licenza vive nel free). Free più nuovo = sempre ok.
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
@@ -59,6 +59,16 @@ unset( $aisa_premium_class, $aisa_premium_inc );
 final class Aisa_Premium {
 
 	public function __construct() {
+		/*
+		 * Aggiornamenti del componente. Fuori dal boot e dal controllo licenza:
+		 * un cliente la cui licenza è scaduta deve comunque poter aggiornare —
+		 * negargli le patch di sicurezza sarebbe punirlo, non proteggerci.
+		 * Lecito perché questo componente NON è ospitato su WordPress.org.
+		 */
+		if ( is_admin() && file_exists( AISA_PREMIUM_DIR . 'class-aisa-premium-updater.php' ) ) {
+			require_once AISA_PREMIUM_DIR . 'class-aisa-premium-updater.php';
+			new Aisa_Premium_Updater( __FILE__ );
+		}
 		add_action( 'plugins_loaded', [ $this, 'boot' ], 20 ); // DOPO il free (10): la licenza (Aisa_License) la istanzia il free, qui la leggiamo pronta. Il filtro rotation è nel costruttore (già pronto a :10).
 		add_action( 'admin_notices', [ $this, 'requirement_notice' ] );
 		// Il companion senza il plugin base non fa nulla → si auto-disattiva se il free è spento.
