@@ -110,6 +110,7 @@ class Aisa_Premium_Updater {
 			'url'         => sprintf( 'https://github.com/%s/%s', self::OWNER, self::REPO ),
 			'package'     => $rel['package'],
 			'tested'      => get_bloginfo( 'version' ),
+			'icons'       => $this->icons(),
 		];
 
 		if ( version_compare( $rel['version'], (string) $cur, '>' ) ) {
@@ -137,7 +138,21 @@ class Aisa_Premium_Updater {
 			'author'        => '<a href="https://ingenium-project.com">Ingenium Project</a>',
 			'homepage'      => 'https://aiseoassistant.io/',
 			'download_link' => $rel['package'],
+			'icons'         => $this->icons(),
 			'sections'      => [ 'changelog' => wpautop( esc_html( $rel['notes'] ) ) ],
+		];
+	}
+
+	/**
+	 * Icona del companion (stessa del plugin free + pillola "Premium"): senza queste
+	 * URL WordPress mostra il riquadro vuoto in Aggiornamenti e in "Visualizza dettagli".
+	 * @return array<string,string>
+	 */
+	private function icons(): array {
+		return [
+			'1x'      => plugins_url( 'assets/icon-premium-128x128.png', __FILE__ ),
+			'2x'      => plugins_url( 'assets/icon-premium-256x256.png', __FILE__ ),
+			'default' => plugins_url( 'assets/icon-premium-256x256.png', __FILE__ ),
 		];
 	}
 }
