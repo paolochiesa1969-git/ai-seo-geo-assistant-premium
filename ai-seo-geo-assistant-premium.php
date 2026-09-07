@@ -3,7 +3,7 @@
  * Plugin Name:       AISA — AI SEO & GEO Assistant — Premium
  * Plugin URI:        https://aiseoassistant.io
  * Description:       Componente Premium di AISA — AI SEO & GEO Assistant: One-Click SEO, Bulk SEO & GEO, automazione programmata, Extended SEO & Rotation. Si installa accanto al plugin free; le funzioni si attivano con licenza valida.
- * Version:           1.99.998
+ * Version:           1.99.999
  * Author:            Ingenium Project
  * Author URI:        https://ingenium-project.com
  * Text Domain:       ai-seo-geo-assistant-premium
@@ -24,7 +24,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISA_PREMIUM_VERSION', '1.99.998' );
+define( 'AISA_PREMIUM_VERSION', '1.99.999' );
 define( 'AISA_PREMIUM_MIN_FREE', '1.99.882' ); // prima coppia ALLINEATA free/companion (la Licenza vive nel free). Free più nuovo = sempre ok.
 define( 'AISA_PREMIUM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AISA_PREMIUM_URL', plugin_dir_url( __FILE__ ) );
@@ -49,6 +49,9 @@ foreach ( [
 	// vivono QUI. Nel free .org queste classi semplicemente non esistono.
 	'Aisa_Seo_Fix_Apply' => 'includes/class-aisa-seo-fix-apply.php',
 	'Aisa_Consultant'    => 'includes/class-aisa-consultant.php',
+	// 🔌 Abilities API (MCP): le abilities che SCRIVONO sono premium (§3-bis della
+	// SPEC) — la registrazione resta comunque dietro aisa_abilities_enabled().
+	'Aisa_Abilities_Pro' => 'includes/class-aisa-abilities-pro.php',
 ] as $aisa_premium_class => $aisa_premium_inc ) {
 	if ( ! class_exists( $aisa_premium_class ) && file_exists( AISA_PREMIUM_DIR . $aisa_premium_inc ) ) {
 		require_once AISA_PREMIUM_DIR . $aisa_premium_inc;
@@ -132,6 +135,7 @@ final class Aisa_Premium {
 			// dichiara più; Aisa_Consultant è premium per intero (menu + AJAX).
 			if ( class_exists( 'Aisa_Seo_Fix_Apply' ) && class_exists( 'Aisa_Seo_Fix' ) ) new Aisa_Seo_Fix_Apply();
 			if ( class_exists( 'Aisa_Consultant' ) )  new Aisa_Consultant();
+			if ( class_exists( 'Aisa_Abilities_Pro' ) ) new Aisa_Abilities_Pro();
 		}
 
 		// Punto di registrazione di eventuali estensioni pro esterne.
