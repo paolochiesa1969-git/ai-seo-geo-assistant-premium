@@ -55,6 +55,9 @@ foreach ( [
 	// 🛠️ 2.0.2 (A1): correzioni all'output del plugin SEO (breadcrumb a un gradino, og:type
 	// in home, meta author) — interruttori spenti di default, sezione nella pagina Schema.
 	'Aisa_Schema_Corrections' => 'includes/class-aisa-schema-corrections.php',
+	// 📖 Leggibilità, fase 1b: «Split long sentences» nel pannello Clarity (anteprima prima/dopo,
+	// applicazione solo delle frasi scelte). Lo script readability-rewrite.js sta in assets/js/.
+	'Aisa_Readability_Rewrite' => 'includes/class-aisa-readability-rewrite.php',
 ] as $aisa_premium_class => $aisa_premium_inc ) {
 	if ( ! class_exists( $aisa_premium_class ) && file_exists( AISA_PREMIUM_DIR . $aisa_premium_inc ) ) {
 		require_once AISA_PREMIUM_DIR . $aisa_premium_inc;
@@ -140,6 +143,7 @@ final class Aisa_Premium {
 			if ( class_exists( 'Aisa_Consultant' ) )  new Aisa_Consultant();
 			if ( class_exists( 'Aisa_Abilities_Pro' ) ) new Aisa_Abilities_Pro();
 			if ( class_exists( 'Aisa_Schema_Corrections' ) ) new Aisa_Schema_Corrections();
+			if ( class_exists( 'Aisa_Readability_Rewrite' ) && class_exists( 'Aisa_Readability' ) ) new Aisa_Readability_Rewrite();
 		}
 
 		// Punto di registrazione di eventuali estensioni pro esterne.
