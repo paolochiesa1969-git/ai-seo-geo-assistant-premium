@@ -73,10 +73,26 @@ final class Aisa_Premium {
 		 * un cliente la cui licenza è scaduta deve comunque poter aggiornare —
 		 * negargli le patch di sicurezza sarebbe punirlo, non proteggerci.
 		 * Lecito perché questo componente NON è ospitato su WordPress.org.
+		 *
+		 * 2026-10-19 (2.0.6, voce 1b — FIX-2026-10-14): prima l'updater si caricava solo con
+		 * is_admin(), ma il controllo aggiornamenti gira anche nel cron, in WP-CLI, in WP Toolkit
+		 * e in REST: lì il filtro non esisteva e il companion non compariva mai tra gli
+		 * aggiornamenti. Ora: subito in admin/cron/CLI/REST; altrove (frontend dei visitatori)
+		 * solo due add_action, e il file si include nel momento in cui WordPress scrive il
+		 * transient update_plugins o parte una richiesta REST (REST_REQUEST è definita dopo il
+		 * caricamento dei plugin). Nessun costo per i visitatori.
 		 */
-		if ( is_admin() && file_exists( AISA_PREMIUM_DIR . 'class-aisa-premium-updater.php' ) ) {
-			require_once AISA_PREMIUM_DIR . 'class-aisa-premium-updater.php';
-			new Aisa_Premium_Updater( __FILE__ );
+		if ( file_exists( AISA_PREMIUM_DIR . 'class-aisa-premium-updater.php' ) ) {
+			if ( self::update_context() ) {
+				self::load_updater();
+			} else {
+				add_action( 'rest_api_init', [ __CLASS__, 'load_updater' ], 0 );
+				// Priorità minima: il filtro dell'updater (10) si aggiunge durante questo stesso giro
+				// e WP_Hook lo esegue (cron «alternativo», script che includono wp-load.php…).
+				add_filter( 'pre_set_site_transient_update_plugins', [ __CLASS__, 'load_updater_passthrough' ], PHP_INT_MIN );
+			}
+			// All'attivazione (anche dopo un'installazione a mano) la cache della release riparte da zero.
+			register_activation_hook( __FILE__, [ __CLASS__, 'on_activate' ] );
 		}
 		add_action( 'plugins_loaded', [ $this, 'boot' ], 20 ); // DOPO il free (10): la licenza (Aisa_License) la istanzia il free, qui la leggiamo pronta. Il filtro rotation è nel costruttore (già pronto a :10).
 		add_action( 'admin_notices', [ $this, 'requirement_notice' ] );
@@ -95,6 +111,41 @@ final class Aisa_Premium {
 			if ( ! self::license_valid() ) return $engine;
 			return Aisa_Dashboard::is_active( 'rotation' ) ? new Aisa_Rotation() : $engine;
 		} );
+	}
+
+	/** Contesti in cui può girare wp_update_plugins() e vanno caricati subito i filtri dell'updater. */
+	private static function update_context(): bool {
+		return is_admin()
+			|| ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() )
+			|| ( defined( 'WP_CLI' ) && WP_CLI )
+			|| ( defined( 'REST_REQUEST' ) && REST_REQUEST );
+	}
+
+	/** Include e avvia l'updater (una volta sola per richiesta). Accetta e ignora gli argomenti degli hook. */
+	public static function load_updater(): void {
+		if ( ! class_exists( 'Aisa_Premium_Updater' ) ) {
+			if ( ! file_exists( AISA_PREMIUM_DIR . 'class-aisa-premium-updater.php' ) ) return;
+			require_once AISA_PREMIUM_DIR . 'class-aisa-premium-updater.php';
+		}
+		Aisa_Premium_Updater::boot( __FILE__ ); // __FILE__ = file principale (nella build si chiama aisa-…-premium.php)
+	}
+
+	/**
+	 * Caricatore pigro sul filtro del transient: carica l'updater e restituisce il valore intatto
+	 * (l'iniezione la fa il filtro dell'updater, a priorità 10, nello stesso giro).
+	 *
+	 * @param mixed $transient
+	 * @return mixed
+	 */
+	public static function load_updater_passthrough( $transient ) {
+		self::load_updater();
+		return $transient;
+	}
+
+	/** Attivazione: si svuota la cache della release (solo un transient di cache, nessun dato). */
+	public static function on_activate(): void {
+		self::load_updater();
+		if ( class_exists( 'Aisa_Premium_Updater' ) ) Aisa_Premium_Updater::purge();
 	}
 
 	/** Il plugin free è presente e abbastanza recente? */
