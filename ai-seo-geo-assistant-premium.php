@@ -228,7 +228,7 @@ final class Aisa_Premium {
 		delete_transient( 'aisa_premium_self_deactivated' );
 		if ( ! current_user_can( 'activate_plugins' ) ) return;
 		echo '<div class="notice notice-warning is-dismissible"><p>'
-			. esc_html__( 'AISA — AI SEO & GEO Assistant — Premium è stato disattivato automaticamente perché il plugin base "AISA — AI SEO & GEO Assistant" non è attivo. Riattiva prima il plugin base, poi il componente Premium.', 'aisa-ai-seo-geo-assistant' )
+			. esc_html__( 'AISA — AI SEO & GEO Assistant — Premium was deactivated automatically because the base plugin "AISA — AI SEO & GEO Assistant" is not active. Activate the base plugin first, then the Premium component.', 'aisa-ai-seo-geo-assistant' )
 			. '</p></div>';
 	}
 
@@ -237,8 +237,8 @@ final class Aisa_Premium {
 		if ( $this->free_ok() ) return;
 		if ( ! current_user_can( 'activate_plugins' ) ) return;
 		$msg = defined( 'AISA_VERSION' )
-			? sprintf( /* translators: %1$s: required version; %2$s: present version */ __( 'AISA — AI SEO &amp; GEO Assistant <strong>free</strong> è troppo vecchio per il componente Premium (serve ≥ %1$s, presente %2$s). Aggiorna il plugin free.', 'aisa-ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_MIN_FREE ), esc_html( AISA_VERSION ) )
-			: __( 'Il componente <strong>AISA — AI SEO &amp; GEO Assistant — Premium</strong> richiede il plugin base <strong>AISA — AI SEO &amp; GEO Assistant</strong> (free) attivo.', 'aisa-ai-seo-geo-assistant' );
+			? sprintf( /* translators: %1$s: required version; %2$s: present version */ __( 'AISA — AI SEO &amp; GEO Assistant <strong>free</strong> is too old for the Premium component (it needs %1$s or newer, this site has %2$s). Update the free plugin.', 'aisa-ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_MIN_FREE ), esc_html( AISA_VERSION ) )
+			: __( 'The <strong>AISA — AI SEO &amp; GEO Assistant — Premium</strong> component needs the base plugin <strong>AISA — AI SEO &amp; GEO Assistant</strong> (free) to be active.', 'aisa-ai-seo-geo-assistant' );
 		echo '<div class="notice notice-warning"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 
@@ -248,11 +248,15 @@ final class Aisa_Premium {
 		$screen = get_current_screen();
 		if ( ! $screen || strpos( (string) $screen->id, 'aisa-license' ) === false ) return;
 		$on = self::license_valid();
-		// Il messaggio contiene <strong> voluto → wp_kses_post in USCITA (escaping tardivo),
-		// la classe della notice passa da esc_attr. Prima il printf stampava grezzo.
-		$msg = $on
-			? sprintf( /* translators: %s: version */ __( '🧩 Componente <strong>Premium</strong> installato e attivo (v%s) — funzioni professionali sbloccate.', 'aisa-ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_VERSION ) )
-			: sprintf( /* translators: %s: version */ __( '🧩 Componente <strong>Premium</strong> installato (v%s). In attesa di una licenza valida per sbloccare le funzioni.', 'aisa-ai-seo-geo-assistant' ), esc_html( AISA_PREMIUM_VERSION ) );
+		// 2.0.7 (30/10/2026): stesse frasi che il free usa già nella pagina Licenza, così arrivano tradotte dal suo .mo
+		// (prima erano in italiano fisso, con un emoji). La versione resta fuori dalla frase.
+		$msg = sprintf(
+			'%s (v%s)',
+			$on
+				? __( 'Premium component installed and activated.', 'aisa-ai-seo-geo-assistant' )
+				: __( 'The Premium component is installed but the licence is not active: Premium functions are off.', 'aisa-ai-seo-geo-assistant' ),
+			esc_html( AISA_PREMIUM_VERSION )
+		);
 		printf(
 			'<div class="notice notice-%s"><p>%s</p></div>',
 			esc_attr( $on ? 'success' : 'info' ),
